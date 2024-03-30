@@ -236,7 +236,7 @@ func (userdata *User) GetFileLocator(filename string) (id uuid.UUID, sym []byte,
 	}
 
 	// KeyFile 包含 fileLocatorUUID
-	if keyFile.isFileOwner {
+	if keyFile.IsFileOwner {
 		return keyFile.FileUUID, keyFile.SymKeyFile, keyFile.MacKeyFile, nil
 	}
 
