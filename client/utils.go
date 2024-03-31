@@ -283,7 +283,7 @@ func (userdata *User) VerifyThenDecKeyFile(filename string) (keyfilePtr *KeyFile
 	dataValue, ok := userlib.DatastoreGet(keyFileUUID)
 	// Error: keyFileUUID 不存在
 	if ok == false {
-		return nil, errors.New("keyFileUUID dose not exists in DataStore")
+		return nil, errors.New("keyFileUUID does not exists in DataStore")
 	}
 
 	// 获取 keyFileEncrypted

@@ -4,9 +4,9 @@ import (
 	"A-Secure-File-Sharing-System/client"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/url"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/cmd/fyne_demo/tutorials"
@@ -157,7 +157,8 @@ func makeLogin(app fyne.App) error {
 		OnSubmit: func() {
 			if authenticate(username.Text, password.Text) {
 
-				showMainWindow(app)
+				User, _ := client.GetUser(username.Text, password.Text)
+				showMainWindow(app, User)
 				loginWidget.Close()
 				// // 发送显示主界面的操作到主 goroutine 中
 				// app.Send(func() {
@@ -176,54 +177,33 @@ func makeLogin(app fyne.App) error {
 	return nil
 
 }
-func makeLogin_v2(app fyne.App) error {
-	// 登陆窗口
-	loginWidget := app.NewWindow("LogIn")
-	// 创建登录界面的代码
-	// 包括用户名、密码输入框、登录按钮等
-	username := widget.NewEntry()
-	username.SetPlaceHolder("John Smith")
-	password := widget.NewPasswordEntry()
-	password.SetPlaceHolder("Password")
-	loginButton := widget.NewButton("click me", func() {
-		if authenticate(username.Text, password.Text) {
-			loginWidget.Close()
-			showMainWindow(app)
-		} else {
-			dialog.ShowError(errors.New("invalid username or password"), loginWidget)
-		}
-	})
 
-	content := container.New(layout.NewVBoxLayout(), username, password, layout.NewSpacer(), loginButton)
-	loginWidget.SetContent(container.New(layout.NewVBoxLayout(), content))
-	// loginWidget.SetContent(content)
-	loginWidget.Resize(fyne.NewSize(340, 460))
-	loginWidget.Show()
-	return nil
-}
-
-// func makeLogin_v2(app fyne.App) (*dialog.Dialog, error) {
-// 	name := widget.NewEntry()
-// 	name.SetPlaceHolder("John Smith")
+// func makeLogin_v2(app fyne.App) error {
+// 	// 登陆窗口
+// 	loginWidget := app.NewWindow("LogIn")
+// 	// 创建登录界面的代码
+// 	// 包括用户名、密码输入框、登录按钮等
+// 	username := widget.NewEntry()
+// 	username.SetPlaceHolder("John Smith")
 // 	password := widget.NewPasswordEntry()
 // 	password.SetPlaceHolder("Password")
+// 	loginButton := widget.NewButton("click me", func() {
+// 		if authenticate(username.Text, password.Text) {
+// 			loginWidget.Close()
+// 			showMainWindow(app,)
+// 		} else {
+// 			dialog.ShowError(errors.New("invalid username or password"), loginWidget)
+// 		}
+// 	})
 
-// 	form := &widget.Form{
-// 		Items: []*widget.FormItem{
-// 			{Text: "Name", Widget: name, HintText: "Your user name"},
-// 			{Text: "Password", Widget: password, HintText: "Your password"},
-// 		},
-// 		OnCancel: func() {
-// 			fmt.Println("Cancelled")
-// 		},
-// 		OnSubmit: func() {
-// 			fmt.Println("Form submitted")
-// 			setUsernamePassword(name.Text, password.Text)
-// 		},
-// 	}
+// 	content := container.New(layout.NewVBoxLayout(), username, password, layout.NewSpacer(), loginButton)
+// 	loginWidget.SetContent(container.New(layout.NewVBoxLayout(), content))
+// 	// loginWidget.SetContent(content)
+// 	loginWidget.Resize(fyne.NewSize(340, 460))
+// 	loginWidget.Show()
+// 	return nil
+// }
 
-//		return form
-//	}
 func makeLogin_v1(win fyne.Window) (<-chan string, <-chan string, *dialog.FormDialog, error) {
 	username := widget.NewEntry()
 	username.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
@@ -281,19 +261,7 @@ func authenticate(username, password string) bool {
 	return true
 }
 
-func showMainWindow(app fyne.App) {
-	// // 创建主界面的代码
-	// // 包括菜单、工具栏、内容等
-
-	// // 在退出按钮的点击事件处理函数中，退出应用程序
-	// exitButton.OnTapped = func() {
-	// 	app.Quit()
-	// }
-
-	// // 创建主窗口并显示
-	// mainWindow := app.NewWindow("Main Window")
-	// mainWindow.SetContent(mainContent)
-	// mainWindow.Show()
+func showMainWindow(app fyne.App, User *client.User) {
 
 	log.Println("登陆成功")
 
@@ -304,7 +272,7 @@ func showMainWindow(app fyne.App) {
 	// newNav := makeNav()
 	// w.SetContent(newNav)
 
-	newTabs := makeTabs()
+	newTabs := makeTabs(w, User)
 	w.SetContent(newTabs)
 
 	w.Show()
@@ -393,21 +361,12 @@ func makeNav_v1(setTutorial func(tutorial tutorials.Tutorial), loadPrevious bool
 	return container.NewBorder(nil, themes, nil, nil, tree)
 }
 
-func makeTabs() fyne.CanvasObject {
-	// w_test := fyne.CurrentApp().NewWindow("StoreFile")
+func makeTabs(win fyne.Window, User *client.User) fyne.CanvasObject {
 
-	clock := widget.NewLabel("")
-	updateTime(clock)
-
-	// w_test.SetContent(clock)
-	go func() {
-		for range time.Tick(time.Second) {
-			updateTime(clock)
-		}
-	}()
-
+	// StoreFileButtion := makeDialogOpenFileButton(win)
+	StoreFile := makeStoreFile(win, User)
 	tabs := container.NewAppTabs(
-		container.NewTabItem("StoreFile", clock),
+		container.NewTabItem("StoreFile", StoreFile),
 		container.NewTabItem("LoadFile", widget.NewLabel("LoadFile")),
 		container.NewTabItem("AppendToFile", widget.NewLabel("AppendToFile")),
 		container.NewTabItem("CreateInvitation", widget.NewLabel("CreateInvitation")),
@@ -420,4 +379,74 @@ func makeTabs() fyne.CanvasObject {
 	tabs.SetTabLocation(container.TabLocationLeading)
 
 	return tabs
+}
+
+func makeDialogOpenFileButton(win fyne.Window, filename *string, data *[]byte) *widget.Button {
+	openFile := widget.NewButton("File Open Without Filter", func() {
+		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+			if err != nil {
+				dialog.ShowError(err, win)
+				return
+			}
+			if reader == nil {
+				log.Println("Cancelled")
+				return
+			}
+
+			// imageOpened(reader)
+			*filename = reader.URI().Name()
+			*data, err = io.ReadAll(reader)
+			if err != nil {
+				fyne.LogError("Failed to load file data", err)
+				return
+			}
+			log.Printf("the filename: %s, the file content: %s", *filename, string(*data))
+		}, win)
+		// fd.SetFilter(storage.NewExtensionFileFilter([]string{".png", ".jpg", ".jpeg"}))
+		fd.Show()
+	})
+
+	// fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+	// 	if err != nil {
+	// 		dialog.ShowError(err, win)
+	// 		return
+	// 	}
+	// 	if reader == nil {
+	// 		log.Println("Cancelled")
+	// 		return
+	// 	}
+
+	// 	imageOpened(reader)
+	// })
+
+	return openFile
+}
+
+func makeStoreFile(win fyne.Window, User *client.User) fyne.CanvasObject {
+	// layout
+	// 打开文件按钮
+	// 保存上传按钮
+
+	var filename string
+	var data []byte
+
+	StoreFileButtion := makeDialogOpenFileButton(win, &filename, &data)
+
+	StoreAndUploadButton := widget.NewButton("upload", func() {
+		if len(filename) == 0 || len(data) == 0 {
+			log.Println("File does not exist.")
+			dialog.NewError(errors.New("file does not exist"), win)
+			return
+		}
+		err := User.StoreFile(filename, data)
+		if err != nil {
+			fyne.LogError("failed to storefile", err)
+			return
+		}
+		dialog.ShowInformation("Success", "File uploaded successfully.", win)
+		log.Println("test ShowInformation")
+	})
+
+	content := container.New(layout.NewVBoxLayout(), StoreFileButtion, layout.NewSpacer(), StoreAndUploadButton)
+	return content
 }
