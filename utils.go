@@ -131,7 +131,7 @@ func shortcutFocused(s fyne.Shortcut, w fyne.Window) {
 }
 
 // 登陆界面
-func makeLogin() error {
+func makeLogin_returnWindow() (fyne.Window, error) {
 	app := fyne.CurrentApp()
 	// 登陆窗口
 	loginWidget := app.NewWindow("LogIn")
@@ -172,13 +172,21 @@ func makeLogin() error {
 	}
 
 	// 注册按钮
+	registerButton := makeRegisterButton(loginWidget)
 
-	loginWidget.SetContent(form)
+	container := container.New(layout.NewVBoxLayout(), form, registerButton)
+
+	loginWidget.SetContent(container)
 	// loginWidget.SetContent(content)
 	loginWidget.Resize(fyne.NewSize(340, 460))
 	loginWidget.Show()
-	return nil
+	return loginWidget, nil
 
+}
+
+func makeLogin() error {
+	_, err := makeLogin_returnWindow()
+	return err
 }
 
 // func makeLogin_v2(app fyne.App) error {
@@ -277,17 +285,27 @@ func showRegisterWindow() {
 			{Text: "Password", Widget: password2, HintText: "Conform your passwrod"},
 		},
 		OnCancel: func() {
-
-			// TODO
-			registerWidget.Close()
-			log.Println("quit")
+			defer registerWidget.Close()
+			// 跳回登陆界面
+			err := makeLogin()
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Println("register -> login")
 		},
 		OnSubmit: func() {
-			User, err := authenticate_register(username.Text, password1.Text, password2.Text)
+			err := authenticate_register(username.Text, password1.Text, password2.Text)
 			if err != nil {
 				dialog.ShowError(err, registerWidget)
 			} else {
+				defer registerWidget.Close()
 				// 跳回登陆界面
+				win, err := makeLogin_returnWindow()
+				if err != nil {
+					log.Fatal(err)
+				}
+				dialog.ShowInformation("Success", "Registered successfully!", win)
+				log.Println("register -> login")
 			}
 		},
 	}
@@ -318,19 +336,20 @@ func authenticate(username, password string) bool {
 	return true
 }
 
-func authenticate_register(username, password1, password2 string) (*client.User, error) {
+// 用户注册验证
+func authenticate_register(username, password1, password2 string) error {
 	if password1 != password2 {
 		log.Println("password1 != password2")
-		return nil, errors.New("password1 != password2")
+		return errors.New("password1 != password2")
 	}
 	// username 好像需要唯一
 
-	User, err := client.InitUser(username, password1)
+	_, err := client.InitUser(username, password1)
 	if err != nil {
 		log.Println(err.Error())
-		return nil, err
+		return err
 	}
-	return User, nil
+	return nil
 }
 
 func showMainWindow(app fyne.App, User *client.User) {
@@ -493,8 +512,8 @@ func makeDialogFileSaveButton(win fyne.Window, filename *string, User *client.Us
 				log.Println("Cancelled")
 				return
 			}
-
 			fileSaved(writer, win, filename, User)
+
 		}, win)
 	})
 
@@ -506,7 +525,8 @@ func fileSaved(f fyne.URIWriteCloser, w fyne.Window, filename *string, User *cli
 
 	// loadFile
 	if len(*filename) == 0 {
-		dialog.ShowError(errors.New("filename is empty"), w)
+		err := errors.New("filename is empty")
+		dialog.ShowError(err, w)
 		return
 	}
 	log.Printf("filename: %s", *filename)
@@ -522,7 +542,7 @@ func fileSaved(f fyne.URIWriteCloser, w fyne.Window, filename *string, User *cli
 		dialog.ShowError(err, w)
 		return
 	}
-
+	dialog.ShowInformation("Success", "The file was successfully saved locally.", w)
 	log.Println("Saved to...", f.URI())
 }
 

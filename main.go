@@ -19,7 +19,7 @@ var username string
 var password string
 
 func main() {
-	// 初始化用户
+	// 初始化测试用户
 	client.InitUser("test", "test")
 
 	// 创建应用程序
