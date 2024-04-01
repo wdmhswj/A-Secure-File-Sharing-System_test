@@ -26,7 +26,7 @@ func main() {
 	fyneApp := app.NewWithID("test")
 
 	// 创建登录界面
-	err := makeLogin(fyneApp)
+	err := makeLogin()
 	if err != nil {
 		log.Fatal(err)
 	}

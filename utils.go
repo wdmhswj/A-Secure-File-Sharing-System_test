@@ -131,7 +131,8 @@ func shortcutFocused(s fyne.Shortcut, w fyne.Window) {
 }
 
 // 登陆界面
-func makeLogin(app fyne.App) error {
+func makeLogin() error {
+	app := fyne.CurrentApp()
 	// 登陆窗口
 	loginWidget := app.NewWindow("LogIn")
 
@@ -148,7 +149,7 @@ func makeLogin(app fyne.App) error {
 	form := &widget.Form{
 		Items: []*widget.FormItem{
 			{Text: "Name", Widget: username, HintText: "Your username"},
-			{Text: "Email", Widget: password, HintText: "Your passwrod"},
+			{Text: "Password", Widget: password, HintText: "Your passwrod"},
 		},
 		OnCancel: func() {
 			loginWidget.Close()
@@ -169,6 +170,8 @@ func makeLogin(app fyne.App) error {
 			}
 		},
 	}
+
+	// 注册按钮
 
 	loginWidget.SetContent(form)
 	// loginWidget.SetContent(content)
@@ -240,7 +243,61 @@ func makeLogin_v1(win fyne.Window) (<-chan string, <-chan string, *dialog.FormDi
 }
 
 // 注册界面
-func makeRegister() {
+func makeRegisterButton(win fyne.Window) *widget.Button {
+	registerButton := widget.NewButton("Register", func() {
+		// 关闭当前登陆界面，加载注册界面
+		showRegisterWindow()
+		win.Close()
+	})
+
+	return registerButton
+}
+
+func showRegisterWindow() {
+	app := fyne.CurrentApp()
+	// 登陆窗口
+	registerWidget := app.NewWindow("Register")
+
+	username := widget.NewEntry()
+	username.SetPlaceHolder("John Smith")
+
+	// email := widget.NewEntry()
+	// email.SetPlaceHolder("test@example.com")
+	// email.Validator = validation.NewRegexp(`\w{1,}@\w{1,}\.\w{1,4}`, "not a valid email")
+
+	password1 := widget.NewPasswordEntry()
+	password1.SetPlaceHolder("Password")
+	password2 := widget.NewPasswordEntry()
+	password2.SetPlaceHolder("Password")
+
+	form := &widget.Form{
+		Items: []*widget.FormItem{
+			{Text: "Name", Widget: username, HintText: "Your username"},
+			{Text: "Password", Widget: password1, HintText: "Your passwrod"},
+			{Text: "Password", Widget: password2, HintText: "Conform your passwrod"},
+		},
+		OnCancel: func() {
+
+			// TODO
+			registerWidget.Close()
+			log.Println("quit")
+		},
+		OnSubmit: func() {
+			User, err := authenticate_register(username.Text, password1.Text, password2.Text)
+			if err != nil {
+				dialog.ShowError(err, registerWidget)
+			} else {
+				// 跳回登陆界面
+			}
+		},
+	}
+
+	// 注册按钮
+
+	registerWidget.SetContent(form)
+	// loginWidget.SetContent(content)
+	registerWidget.Resize(fyne.NewSize(340, 460))
+	registerWidget.Show()
 
 }
 
@@ -259,6 +316,21 @@ func authenticate(username, password string) bool {
 		return false
 	}
 	return true
+}
+
+func authenticate_register(username, password1, password2 string) (*client.User, error) {
+	if password1 != password2 {
+		log.Println("password1 != password2")
+		return nil, errors.New("password1 != password2")
+	}
+	// username 好像需要唯一
+
+	User, err := client.InitUser(username, password1)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+	return User, nil
 }
 
 func showMainWindow(app fyne.App, User *client.User) {
@@ -410,7 +482,7 @@ func makeDialogOpenFileButton(win fyne.Window, filename *string, data *[]byte) *
 	return openFile
 }
 
-func makeDialogFileSaveButtion(win fyne.Window, filename *string, User *client.User) *widget.Button {
+func makeDialogFileSaveButton(win fyne.Window, filename *string, User *client.User) *widget.Button {
 	saveFile := widget.NewButton("File Save", func() {
 		dialog.ShowFileSave(func(writer fyne.URIWriteCloser, err error) {
 			if err != nil {
@@ -450,7 +522,7 @@ func fileSaved(f fyne.URIWriteCloser, w fyne.Window, filename *string, User *cli
 		dialog.ShowError(err, w)
 		return
 	}
-	
+
 	log.Println("Saved to...", f.URI())
 }
 
@@ -492,7 +564,7 @@ func makeLoadFile(win fyne.Window, User *client.User) fyne.CanvasObject {
 	filename.SetPlaceHolder("Enter the filename")
 
 	// 保存按钮
-	LoadAndSaveButton := makeDialogFileSaveButtion(win, &filename.Text, User)
+	LoadAndSaveButton := makeDialogFileSaveButton(win, &filename.Text, User)
 
 	// 从datastore获取数据
 	// 保存到本地文件夹
