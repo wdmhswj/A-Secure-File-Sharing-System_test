@@ -365,9 +365,10 @@ func makeTabs(win fyne.Window, User *client.User) fyne.CanvasObject {
 
 	// StoreFileButtion := makeDialogOpenFileButton(win)
 	StoreFile := makeStoreFile(win, User)
+	LoadFile := makeLoadFile(win, User)
 	tabs := container.NewAppTabs(
 		container.NewTabItem("StoreFile", StoreFile),
-		container.NewTabItem("LoadFile", widget.NewLabel("LoadFile")),
+		container.NewTabItem("LoadFile", LoadFile),
 		container.NewTabItem("AppendToFile", widget.NewLabel("AppendToFile")),
 		container.NewTabItem("CreateInvitation", widget.NewLabel("CreateInvitation")),
 		container.NewTabItem("AcceptInvitation", widget.NewLabel("AcceptInvitation")),
@@ -406,20 +407,51 @@ func makeDialogOpenFileButton(win fyne.Window, filename *string, data *[]byte) *
 		fd.Show()
 	})
 
-	// fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
-	// 	if err != nil {
-	// 		dialog.ShowError(err, win)
-	// 		return
-	// 	}
-	// 	if reader == nil {
-	// 		log.Println("Cancelled")
-	// 		return
-	// 	}
-
-	// 	imageOpened(reader)
-	// })
-
 	return openFile
+}
+
+func makeDialogFileSaveButtion(win fyne.Window, filename *string, User *client.User) *widget.Button {
+	saveFile := widget.NewButton("File Save", func() {
+		dialog.ShowFileSave(func(writer fyne.URIWriteCloser, err error) {
+			if err != nil {
+				dialog.ShowError(err, win)
+				return
+			}
+			if writer == nil {
+				log.Println("Cancelled")
+				return
+			}
+
+			fileSaved(writer, win, filename, User)
+		}, win)
+	})
+
+	return saveFile
+}
+
+func fileSaved(f fyne.URIWriteCloser, w fyne.Window, filename *string, User *client.User) {
+	defer f.Close()
+
+	// loadFile
+	if len(*filename) == 0 {
+		dialog.ShowError(errors.New("filename is empty"), w)
+		return
+	}
+	log.Printf("filename: %s", *filename)
+	data, err := User.LoadFile(*filename)
+	if err != nil {
+		log.Println(err.Error())
+		dialog.ShowError(err, w)
+		return
+	}
+	log.Printf("data: %s", data)
+	_, err = f.Write(data)
+	if err != nil {
+		dialog.ShowError(err, w)
+		return
+	}
+	
+	log.Println("Saved to...", f.URI())
 }
 
 func makeStoreFile(win fyne.Window, User *client.User) fyne.CanvasObject {
@@ -435,7 +467,8 @@ func makeStoreFile(win fyne.Window, User *client.User) fyne.CanvasObject {
 	StoreAndUploadButton := widget.NewButton("upload", func() {
 		if len(filename) == 0 || len(data) == 0 {
 			log.Println("File does not exist.")
-			dialog.NewError(errors.New("file does not exist"), win)
+			dialog.ShowInformation("Error", "File does not exist!", win)
+			// dialog.NewError(errors.New("file does not exist"), win)
 			return
 		}
 		err := User.StoreFile(filename, data)
@@ -444,9 +477,28 @@ func makeStoreFile(win fyne.Window, User *client.User) fyne.CanvasObject {
 			return
 		}
 		dialog.ShowInformation("Success", "File uploaded successfully.", win)
+		filename = ""
+		data = nil
 		log.Println("test ShowInformation")
 	})
 
 	content := container.New(layout.NewVBoxLayout(), StoreFileButtion, layout.NewSpacer(), StoreAndUploadButton)
 	return content
+}
+
+func makeLoadFile(win fyne.Window, User *client.User) fyne.CanvasObject {
+	// 输入文件名的输入框
+	filename := widget.NewEntry()
+	filename.SetPlaceHolder("Enter the filename")
+
+	// 保存按钮
+	LoadAndSaveButton := makeDialogFileSaveButtion(win, &filename.Text, User)
+
+	// 从datastore获取数据
+	// 保存到本地文件夹
+
+	content := container.New(layout.NewVBoxLayout(), filename, layout.NewSpacer(), LoadAndSaveButton)
+
+	return content
+
 }

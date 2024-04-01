@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	userlib "github.com/cs161-staff/project2-userlib"
 	"github.com/google/uuid"
@@ -175,6 +176,7 @@ func VerifyThenDecFileLocator(symKeyFL []byte, macKeyFL []byte, fileLocatorUUID 
 
 	// Confirm authenticity using HMACEqual()
 	if !userlib.HMACEqual(hmacTagVerify, hmacTag) {
+		log.Printf("hamcTagVerify: %v, hmacTag: %v", hmacTagVerify, hmacTag)
 		return nil, errors.New("FileLocator has been modified, tampered")
 	}
 
