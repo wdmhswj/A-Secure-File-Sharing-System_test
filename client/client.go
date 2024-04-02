@@ -15,6 +15,7 @@ package client
 // - strings
 
 import (
+	//"bytes"
 	"encoding/json"
 
 	userlib "github.com/cs161-staff/project2-userlib"
@@ -33,144 +34,6 @@ import (
 	// Optional.
 	_ "strconv"
 )
-
-// // This serves two purposes: it shows you a few useful primitives,
-// // and suppresses warnings for imports not being used. It can be
-// // safely deleted!
-// func someUsefulThings() {
-
-// 	// Creates a random UUID.
-// 	randomUUID := uuid.New()
-
-// 	// Prints the UUID as a string. %v prints the value in a default format.
-// 	// See https://pkg.go.dev/fmt#hdr-Printing for all Golang format string flags.
-// 	userlib.DebugMsg("Random UUID: %v", randomUUID.String())
-
-// 	// Creates a UUID deterministically, from a sequence of bytes.
-// 	hash := userlib.Hash([]byte("user-structs/alice"))
-// 	deterministicUUID, err := uuid.FromBytes(hash[:16])
-// 	if err != nil {
-// 		// Normally, we would `return err` here. But, since this function doesn't return anything,
-// 		// we can just panic to terminate execution. ALWAYS, ALWAYS, ALWAYS check for errors! Your
-// 		// code should have hundreds of "if err != nil { return err }" statements by the end of this
-// 		// project. You probably want to avoid using panic statements in your own code.
-// 		panic(errors.New("An error occurred while generating a UUID: " + err.Error()))
-// 	}
-// 	userlib.DebugMsg("Deterministic UUID: %v", deterministicUUID.String())
-
-// 	// Declares a Course struct type, creates an instance of it, and marshals it into JSON.
-// 	type Course struct {
-// 		name      string
-// 		professor []byte
-// 	}
-
-// 	course := Course{"CS 161", []byte("Nicholas Weaver")}
-// 	courseBytes, err := json.Marshal(course)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	userlib.DebugMsg("Struct: %v", course)
-// 	userlib.DebugMsg("JSON Data: %v", courseBytes)
-
-// 	// Generate a random private/public keypair.
-// 	// The "_" indicates that we don't check for the error case here.
-// 	var pk userlib.PKEEncKey
-// 	var sk userlib.PKEDecKey
-// 	pk, sk, _ = userlib.PKEKeyGen()
-// 	userlib.DebugMsg("PKE Key Pair: (%v, %v)", pk, sk)
-
-// 	// Here's an example of how to use HBKDF to generate a new key from an input key.
-// 	// Tip: generate a new key everywhere you possibly can! It's easier to generate new keys on the fly
-// 	// instead of trying to think about all of the ways a key reuse attack could be performed. It's also easier to
-// 	// store one key and derive multiple keys from that one key, rather than
-// 	originalKey := userlib.RandomBytes(16)
-// 	derivedKey, err := userlib.HashKDF(originalKey, []byte("mac-key"))
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	userlib.DebugMsg("Original Key: %v", originalKey)
-// 	userlib.DebugMsg("Derived Key: %v", derivedKey)
-
-// 	// A couple of tips on converting between string and []byte:
-// 	// To convert from string to []byte, use []byte("some-string-here")
-// 	// To convert from []byte to string for debugging, use fmt.Sprintf("hello world: %s", some_byte_arr).
-// 	// To convert from []byte to string for use in a hashmap, use hex.EncodeToString(some_byte_arr).
-// 	// When frequently converting between []byte and string, just marshal and unmarshal the data.
-// 	//
-// 	// Read more: https://go.dev/blog/strings
-
-// 	// Here's an example of string interpolation!
-// 	_ = fmt.Sprintf("%s_%d", "file", 1)
-// }
-
-// // This is the type definition for the User struct.
-// // A Go struct is like a Python or Java class - it can have attributes
-// // (e.g. like the Username attribute) and methods (e.g. like the StoreFile method below).
-// // 这里来定义一下结构体
-// type TreeNode struct {
-// 	Value    int
-// 	Children []*TreeNode
-// }
-// type User struct {
-// 	// Username string
-// 	// Password string
-// 	// // Private_key是用来对用户进行解密的
-// 	// // Signature_key是用来对数据进行解密的
-// 	// Private_key   userlib.PKEDecKey
-// 	// Signature_key userlib.DSSignKey
-// 	// // 这里对于Intermediate Id想以树的方式来定义
-// 	// IntermediateUUIDmap TreeNode
-
-// 	Username string
-// 	Password string
-// 	// ADDD LATER ---------------------------------
-// 	PrivateKey       userlib.PKEDecKey
-// 	SignatureKey     userlib.DSSignKey
-// 	IntermediateUUID map[string]map[string]Invitation
-
-// 	// You can add other attributes here if you want! But note that in order for attributes to
-// 	// be included when this struct is serialized to/from JSON, they must be capitalized.
-// 	// On the flipside, if you have an attribute that you want to be able to access from
-// 	// this struct's methods, but you DON'T want that value to be included in the serialized value
-// 	// of this struct that's stored in datastore, then you can use a "private" variable (e.g. one that
-// 	// begins with a lowercase letter).
-// }
-// type FileNode struct {
-// 	Contents []byte
-// 	PrevUUID uuid.UUID
-// 	NextUUID uuid.UUID
-// }
-
-// // 包含文件对应的 FileNode 地址
-// type FileLocator struct {
-// 	FirstFileNodeUUID uuid.UUID
-// 	LastFileNodeUUID  uuid.UUID
-// 	SymKeyFN          []byte
-// 	MacKeyFN          []byte
-// }
-
-// // 文件分享接收者通过 Intermediate 获取 fileLocator 的解密密钥
-// type Intermediate struct {
-// 	FileLocatorUUID   uuid.UUID
-// 	SymKeyFileLocator []byte
-// 	MacKeyFileLocator []byte
-// }
-
-// // 每个用户通过 keyFile 来打开 file
-// type KeyFile struct {
-// 	isFileOwner bool
-// 	FileUUID    uuid.UUID
-// 	SymKeyFile  []byte
-// 	MacKeyFile  []byte
-// }
-
-// // 文件分享邀请
-// type Invitation struct {
-// 	IntermediateUUID uuid.UUID
-// 	SymKeyInter      []byte
-// 	MacKeyInter      []byte
-// }
 
 // This serves two purposes: it shows you a few useful primitives,
 // and suppresses warnings for imports not being used. It can be
@@ -563,7 +426,7 @@ func (userdata *User) CreateInvitation(filename string, recipientUsername string
 	//Error: recipientUsername does not exist
 	recipientUUID, err := uuid.FromBytes(userlib.Hash([]byte(recipientUsername))[:16])
 	_, ok := userlib.DatastoreGet(recipientUUID)
-	if !ok {
+	if ok == false {
 		return uuid.Nil, errors.New("UUID(recipient) does not exists in DataStore")
 	}
 	// Case: user can't access the data
@@ -576,7 +439,7 @@ func (userdata *User) CreateInvitation(filename string, recipientUsername string
 	var invitation Invitation
 	var invitationUUID uuid.UUID
 
-	if keyFile.IsFileOwner { // Invitation send by owner
+	if keyFile.IsFileOwner == true { // Invitation send by owner
 		// Create a new intermediate then encrypt and mac it
 		symKeyIntermediate, macKeyIntermediate, err := GenerateSymAndMacKey("enc-mac-intermediate-struct")
 		if err != nil {
@@ -798,4 +661,290 @@ func (userdata *User) RevokeAccess(filename string, recipientUsername string) er
 	}
 
 	return nil
+}
+
+// ############################################################################################
+// #---------------------------HELPER FUNCTIONS GENERATE KEYS---------------------------------#
+// ############################################################################################
+func GenerateKeys(username string, password string) (encKey []byte, macKey []byte) {
+	usernameHash := userlib.Hash([]byte(username))[:16]
+	passwordHash := userlib.Hash([]byte(password))[:16]
+
+	symmetricKey := userlib.Argon2Key(passwordHash, usernameHash, 32)
+	encKey = symmetricKey[:16]
+	macKey = symmetricKey[16:]
+
+	return encKey, macKey
+}
+
+func GenerateSymAndMacKey(purpose string) (sym []byte, mac []byte, err error) {
+	sourceKey := userlib.RandomBytes(16)
+	key, err := userlib.HashKDF(sourceKey, []byte(purpose))
+	if err != nil {
+		return nil, nil, errors.New("Something wrong with using HashKDF to generate key")
+	}
+	symKey, macKey := key[:16], key[16:32]
+	return symKey, macKey, nil
+}
+
+func HybridEncryption(publicKey userlib.PKEEncKey, dataBytes []byte, purpose string) (encryptedSymKey []byte, encryptedDataBytes []byte, err error) {
+	symKey, _, _ := GenerateSymAndMacKey(purpose)
+	encryptedSymKey, err = userlib.PKEEnc(publicKey, symKey)
+	if err != nil {
+		return nil, nil, errors.New("CANNOT encrypt the random symmetric key by public key")
+	}
+	iv := userlib.RandomBytes(16)
+	encryptedDataBytes = userlib.SymEnc(symKey, iv, dataBytes)
+	return encryptedSymKey, encryptedDataBytes, nil
+}
+
+func HybridDecryption(privateKey userlib.PKEDecKey, symKeyEncrypted []byte, dataEncrypted []byte) (decryptedBytes []byte, err error) {
+	symKey, err := userlib.PKEDec(privateKey, symKeyEncrypted)
+	if err != nil {
+		return nil, errors.New("Cannot decrypt the symKeyEncrypted using this privateKey")
+	}
+	decryptedBytes = userlib.SymDec(symKey, dataEncrypted)
+	return decryptedBytes, nil
+}
+
+// ##################################################################################################
+// MY NEW HELPER FUNCTION FOR ENCRYPT -- VERIFY AND DECRYPT ########################################
+// #################################################################################################
+func (userdata *User) GetFileLocator(filename string) (id uuid.UUID, sym []byte, mac []byte, err error) {
+	// Decrypt KEYFILE to get keys and uuid of the file (file can be fileLocator or Intermediate)
+	keyFile, err := userdata.VerifyThenDecKeyFile(filename)
+
+	// Case: KeyFile doesnot exist
+	if err != nil {
+		return uuid.Nil, nil, nil, err
+	}
+	// KeyFile hold the fileLocatorUUID
+	if keyFile.IsFileOwner == true {
+		return keyFile.FileUUID, keyFile.SymKeyFile, keyFile.MacKeyFile, nil
+	}
+
+	// KeyFile hold the intermediateUUID
+	intermediate, err := VerifyThenDecIntermediate(keyFile.SymKeyFile, keyFile.MacKeyFile, keyFile.FileUUID)
+	if err != nil {
+		return uuid.Nil, nil, nil, err
+	}
+
+	return intermediate.FileLocatorUUID, intermediate.SymKeyFileLocator, intermediate.MacKeyFileLocator, nil
+}
+
+func EncIntermediate(symKeyInter []byte, macKeyInter []byte, thisIntermediateUUID uuid.UUID, fileLocatorUUID uuid.UUID, symKeyFileLocator []byte, macKeyFileLocator []byte) (err error) {
+	intermediate := Intermediate{fileLocatorUUID, symKeyFileLocator, macKeyFileLocator}
+
+	intermediateBytes, errMarshal := json.Marshal(intermediate)
+	if errMarshal != nil {
+		return errors.New("Marshal error, cannot convert intermediate Struct to bytes")
+	}
+
+	// Use Symmectric key and Mac Key to encrypt then mac the file
+	iv := userlib.RandomBytes(16)
+	intermediateEncrypted := userlib.SymEnc(symKeyInter, iv, intermediateBytes)
+	hmacTag, hmacError := userlib.HMACEval(macKeyInter, intermediateEncrypted)
+	if hmacError != nil {
+		return errors.New("input as key for hmac should be a 16-byte key")
+	}
+	userlib.DatastoreSet(thisIntermediateUUID, append(intermediateEncrypted, hmacTag...))
+
+	return nil
+}
+
+func VerifyThenDecIntermediate(symKey []byte, macKey []byte, interUUID uuid.UUID) (IntermediatePtr *Intermediate, err error) {
+	dataValue, ok := userlib.DatastoreGet(interUUID)
+	if ok != true {
+		return nil, errors.New("The File doesnot exist / Or you has been revoked")
+	}
+	//need to verify and decrypt file node
+	encryptedFile, hmacTag := dataValue[:len(dataValue)-64], dataValue[len(dataValue)-64:]
+	hmacTagVerify, hmacError := userlib.HMACEval(macKey, encryptedFile)
+	if hmacError != nil {
+		return nil, errors.New("Cannot create a tag for Intermediate")
+	}
+
+	// Confirm authenticity using HMACEqual()
+	if !userlib.HMACEqual(hmacTagVerify, hmacTag) {
+		return nil, errors.New("Intermediate has been tampered / Or you has been revoked")
+	}
+
+	// Decrypt
+	decryptedFileLocatorBytes := userlib.SymDec(symKey, encryptedFile)
+	errMarshal := json.Unmarshal(decryptedFileLocatorBytes, &IntermediatePtr)
+	if errMarshal != nil {
+		return nil, errors.New("Unmarshal error, cannot convert bytes")
+	}
+
+	return IntermediatePtr, nil
+}
+
+func EncFileLocator(symKeyFL []byte, macKeyFL []byte, fileLocatorUUID uuid.UUID, FirstFileNodeUUID uuid.UUID, LastFileNodeUUID uuid.UUID, symKeyFN []byte, macKeyFN []byte) (err error) {
+	fileLocator := FileLocator{FirstFileNodeUUID, LastFileNodeUUID, symKeyFN, macKeyFN}
+	fileLocatorBytes, errMarshal := json.Marshal(fileLocator)
+	if errMarshal != nil {
+		return errors.New("Marshal error, cannot convert User Struct tof bytes")
+	}
+
+	// Use Symmectric key and Mac Key to encrypt then mac the file locator
+	iv := userlib.RandomBytes(16)
+	fileLocatorEncrypted := userlib.SymEnc(symKeyFL, iv, fileLocatorBytes)
+	hmacTag, hmacError := userlib.HMACEval(macKeyFL, fileLocatorEncrypted)
+	if hmacError != nil {
+		return errors.New("input as key for hmac should be a 16-byte key")
+	}
+	userlib.DatastoreSet(fileLocatorUUID, append(fileLocatorEncrypted, hmacTag...))
+
+	return nil
+}
+
+func VerifyThenDecFileLocator(symKeyFL []byte, macKeyFL []byte, fileLocatorUUID uuid.UUID) (fileLocatorPtr *FileLocator, err error) {
+	dataValue, ok := userlib.DatastoreGet(fileLocatorUUID)
+	fmt.Println("VerifyThenDecFileLocator")
+	fmt.Println(fileLocatorUUID)
+	if ok != true {
+		return nil, errors.New("The FileLocator doesnot exist")
+	}
+	//need to verify and decrypt file node
+	encryptedFileLocator, hmacTag := dataValue[:len(dataValue)-64], dataValue[len(dataValue)-64:]
+	hmacTagVerify, hmacError := userlib.HMACEval(macKeyFL, encryptedFileLocator)
+	if hmacError != nil {
+		return nil, errors.New("Cannot create a tag for encryptedFileLocator")
+	}
+
+	// Confirm authenticity using HMACEqual()
+	if !userlib.HMACEqual(hmacTagVerify, hmacTag) {
+		return nil, errors.New("FileLocator has been modified, tampered")
+	}
+
+	// Decrypt
+	decryptedFileLocatorBytes := userlib.SymDec(symKeyFL, encryptedFileLocator)
+	var decryptedFileLocator FileLocator
+	errMarshal := json.Unmarshal(decryptedFileLocatorBytes, &decryptedFileLocator)
+	if errMarshal != nil {
+		return nil, errors.New("Unmarshal error, cannot convert bytes to User Struct decryptAndVerifyFileNode()")
+	}
+
+	return &decryptedFileLocator, nil
+}
+
+func EncFileNode(sym []byte, mac []byte, content []byte, nodeUUID uuid.UUID, prevUUID uuid.UUID, nextUUID uuid.UUID) (err error) {
+	newNode := FileNode{content, prevUUID, nextUUID}
+	//convert to bytes
+	newNodeBytes, errMarshal := json.Marshal(newNode)
+	if errMarshal != nil {
+		return errors.New("Marshal error, cannot convert to Bytes")
+	}
+
+	//encrypt fileNoteByte
+	symEncKey, hmacKey := GenerateKeys(string(sym[:])+string(nodeUUID[:]), string(mac[:])+string(nodeUUID[:]))
+	iv := userlib.RandomBytes(16)
+	newFileNodeEncryped := userlib.SymEnc(symEncKey, iv, newNodeBytes)
+
+	//hmac encrypted fileNode
+	hmacTag, hmacError := userlib.HMACEval(hmacKey, newFileNodeEncryped)
+	if hmacError != nil {
+		return errors.New("input as key for hmac should be a 16-byte key")
+	}
+
+	//stores encrypted fileNode with tag in dataStore
+	userlib.DatastoreSet(nodeUUID, append(newFileNodeEncryped, hmacTag...))
+
+	return nil
+}
+
+func VerifyThenDecFileNode(sym []byte, mac []byte, nodeUUID uuid.UUID) (fileNodePtr *FileNode, err error) {
+	//points to the UUID of the encrypted filenode and its tag
+	currFileNodeData, ok := userlib.DatastoreGet(nodeUUID)
+	//Error: no fileNode exist
+	if ok == false {
+		return nil, errors.New("UUID(the fileNode) does not exists in DataStore")
+	}
+
+	//Retrieve/separate the encryptedFileNode and its hmac
+	encryptedFileNode := currFileNodeData[:len(currFileNodeData)-64]
+	hmacTag := currFileNodeData[len(currFileNodeData)-64:]
+
+	//regenrate key and recreate hmac tag to verify
+	symEncKey, hmacKey := GenerateKeys(string(sym[:])+string(nodeUUID[:]), string(mac[:])+string(nodeUUID[:]))
+	hmacTagVerify, hmacError := userlib.HMACEval(hmacKey, encryptedFileNode)
+	if hmacError != nil {
+		return nil, errors.New("input as key for hmac should be a 16-byte key")
+	}
+
+	// Confirm authenticity using HMACEqual()
+	if !userlib.HMACEqual(hmacTagVerify, hmacTag) {
+		return nil, errors.New("filedataNode has been modified")
+	}
+
+	// decrypt file node
+	decryptedFileNodeBytes := userlib.SymDec(symEncKey, encryptedFileNode)
+	var decryptedFileNode FileNode
+	errMarshal := json.Unmarshal(decryptedFileNodeBytes, &decryptedFileNode)
+	if errMarshal != nil {
+		return nil, errors.New("Unmarshal error, cannot convert bytes to Struct")
+	}
+
+	return &decryptedFileNode, nil
+}
+
+func (userdata *User) EncKeyFile(filename string, isFileOwner bool, fileUUID uuid.UUID, symKeyF []byte, macKeyF []byte) (err error) {
+	// Store the 2 keys sym and mac for the file in KeyFile Struct
+	keyFile := KeyFile{isFileOwner, fileUUID, symKeyF, macKeyF}
+	keyFileBytes, errMarshal := json.Marshal(keyFile)
+	if errMarshal != nil {
+		return errors.New("Marshal error, cannot convert User Struct to bytes")
+	}
+
+	// Generate symmetricKey and macKey from username and file to Encrypt then Tag
+	symEncKey, macKey := GenerateKeys(userdata.Username, filename)
+	iv := userlib.RandomBytes(16)
+	keyFileEncrypted := userlib.SymEnc(symEncKey, iv, keyFileBytes)
+	hmacTag, hmacError := userlib.HMACEval(macKey, keyFileEncrypted)
+	if hmacError != nil {
+		return errors.New("input as key for hmac should be a 16-byte key")
+	}
+	// Store the new keyFileUUID to datastore
+	keyFileUUID, err := uuid.FromBytes(userlib.Hash([]byte(userdata.Username + "file" + filename))[:16])
+	userlib.DatastoreSet(keyFileUUID, append(keyFileEncrypted, hmacTag...))
+
+	return nil
+}
+
+func (userdata *User) VerifyThenDecKeyFile(filename string) (keyfilePtr *KeyFile, err error) {
+	// Get the keyFileUUID from username + filename
+	keyFileUUID, err := uuid.FromBytes(userlib.Hash([]byte(userdata.Username + "file" + filename))[:16])
+	dataValue, ok := userlib.DatastoreGet(keyFileUUID)
+	//Error: keyFileUUID not exist
+	if ok == false {
+		return nil, errors.New("keyFileUUID does not exists in DataStore")
+	}
+	//----------------------------------------------------------------------
+
+	// Retrieve keyFileEncrypted
+	keyFileEncrypted := dataValue[:len(dataValue)-64]
+	// Retrieve hmacTag
+	hmacTag := dataValue[len(dataValue)-64:]
+
+	// Generate symmetricKey and macKey from username and filename to verify TAG and DECRYPT
+	symEncKey, macKey := GenerateKeys(userdata.Username, filename)
+	hmacTagVerify, hmacError := userlib.HMACEval(macKey, keyFileEncrypted)
+	if hmacError != nil {
+		return nil, errors.New("input as key for hmac should be a 16-byte key")
+	}
+
+	// Confirm authenticity using HMACEqual()
+	if !userlib.HMACEqual(hmacTagVerify, hmacTag) {
+		return nil, errors.New("KeyFile has been modified")
+	}
+
+	// decrypt KeyFile
+	decryptedKeyFileBytes := userlib.SymDec(symEncKey, keyFileEncrypted)
+	var decryptedKeyFile KeyFile
+	errMarshal := json.Unmarshal(decryptedKeyFileBytes, &decryptedKeyFile)
+	if errMarshal != nil {
+		return nil, errors.New("Unmarshal error, cannot convert bytes to Struct")
+	}
+
+	return &decryptedKeyFile, nil
 }
