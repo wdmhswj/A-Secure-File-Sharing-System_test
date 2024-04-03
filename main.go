@@ -3,6 +3,7 @@ package main
 import (
 	"A-Secure-File-Sharing-System/client"
 	"log"
+	"os"
 
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/widget"
@@ -28,6 +29,9 @@ func main() {
 
 	// 运行应用程序
 	fyneApp.Run()
+
+	// 取消环境变量
+	os.Unsetenv("FYNE_FONT")
 }
 
 // func tidyUp() {
