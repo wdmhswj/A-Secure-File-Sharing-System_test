@@ -9,12 +9,16 @@ import (
 )
 
 func main() {
+
+	inits()
 	// 初始化测试用户
 	client.InitUser("test", "test")
 	client.InitUser("test1", "test1")
 
 	// 创建应用程序
 	fyneApp := app.NewWithID("test")
+	// t := getMyTheme()
+	// fyneApp.Settings().SetTheme(t)
 
 	// 创建登录界面
 	err := makeLogin()

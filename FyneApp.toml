@@ -5,4 +5,4 @@ Website = "https://example.com"
   Name = "My App"
   ID = "com.example.app"
   Version = "1.0.0"
-  Build = 8
+  Build = 13
