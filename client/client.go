@@ -220,6 +220,7 @@ func InitUser(username string, password string) (userdataptr *User, err error) {
 
 // #########################################################################            GETUSER         ############################################################################################
 func GetUser(username string, password string) (userdataptr *User, err error) {
+
 	var userdata User
 	hashUsername := userlib.Hash([]byte(username))
 	userUUID, err := uuid.FromBytes(hashUsername[:16])

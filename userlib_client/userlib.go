@@ -120,15 +120,36 @@ func getDatastoreBandwidthShard() *int {
 
 // Sets the value in the datastore
 func datastoreSet(key UUID, value []byte) {
-	// Update bandwidth tracker
-	bandwidth := getDatastoreBandwidthShard()
-	*bandwidth += len(value)
+	// TODO
 
-	foo := make([]byte, len(value))
-	copy(foo, value)
+	// 序列化
+	var buffer bytes.Buffer
+	encoder := json.NewEncoder(&buffer)
 
-	datastoreShard := getDatastoreShard()
-	datastoreShard[key] = foo
+	err := encoder.Encode(key)
+	if err != nil {
+		log.Println("err encoding key UUID: " + err.Error())
+	}
+
+	err = encoder.Encode(value)
+	if err != nil {
+		log.Println("err encoding value []byte: " + err.Error())
+	}
+
+	err = sendPostRequest_noRespData("datastoreSet", buffer.Bytes())
+	if err != nil {
+		log.Println("err sendPostRequest_noRespData: " + err.Error())
+	}
+
+	// // Update bandwidth tracker
+	// bandwidth := getDatastoreBandwidthShard()
+	// *bandwidth += len(value)
+
+	// foo := make([]byte, len(value))
+	// copy(foo, value)
+
+	// datastoreShard := getDatastoreShard()
+	// datastoreShard[key] = foo
 }
 
 var DatastoreSet = datastoreSet
@@ -137,23 +158,16 @@ var DatastoreSet = datastoreSet
 func datastoreGet(key UUID) (value []byte, ok bool) {
 	// TODO
 	// 序列化
-	// 创建一个字节缓冲区，用于存储 JSON 数据
-	var buffer bytes.Buffer
-
-	// 创建一个 JSON 编码器
-	encoder := json.NewEncoder(&buffer)
-
-	// 使用编码器将多个结构体对象序列化为 JSON，并存储到字节缓冲区中
-	err := encoder.Encode(key)
+	data, err := json.Marshal(key)
 	if err != nil {
-		log.Printf("Error encoding person: %v", err)
+		log.Printf("Error Marshal key UUID: %v", err)
 		return nil, false
 	}
 
-	responseData, err := sendPostRequest("datastoreGet", buffer.Bytes())
+	responseData, err := sendPostRequest("datastoreGet", data)
 
 	if err != nil {
-		log.Printf("Error encoding person: %v", err)
+		log.Printf("Error sendPostRequest: %v", err)
 		return nil, false
 	}
 
@@ -177,8 +191,18 @@ var DatastoreGet = datastoreGet
 
 // Deletes a key
 func datastoreDelete(key UUID) {
-	datastoreShard := getDatastoreShard()
-	delete(datastoreShard, key)
+	// TODO
+	// 序列化
+	postData, err := json.Marshal(key)
+	if err!=nil {
+		log.Println("Error json.Marshal: "+err.Error())
+	}
+	err = sendPostRequest_noRespData("datastoreDelete", postData)
+	if err!=nil {
+		log.Println("Error sendPostRequest_noRespData: "+err.Error())
+	}
+	// datastoreShard := getDatastoreShard()
+	// delete(datastoreShard, key)
 }
 
 var DatastoreDelete = datastoreDelete
@@ -218,6 +242,24 @@ var KeystoreClear = keystoreClear
 func keystoreSet(key string, value PublicKeyType) error {
 	// TODO
 
+	// 序列化
+	var buffer bytes.Buffer
+	encoder := json.NewEncoder(&buffer)
+
+	err := encoder.Encode(key)
+	if err != nil {
+		return err
+	}
+
+	err = encoder.Encode(value)
+	if err != nil {
+		return err
+	}
+
+	err = sendPostRequest_noRespData("keystoreSet", buffer.Bytes())
+
+	return err
+
 	// keystoreShard := getKeystoreShard()
 	// _, present := keystoreShard[key]
 	// if present {
@@ -234,9 +276,35 @@ var KeystoreSet = keystoreSet
 
 // Returns the value if it exists
 func keystoreGet(key string) (value PublicKeyType, ok bool) {
-	keystoreShard := getKeystoreShard()
-	value, ok = keystoreShard[key]
+	// TODO
+
+	// 序列化
+	data, err := json.Marshal(key)
+	if err != nil {
+		log.Printf("Error Marshal key UUID: %v", err)
+		return PublicKeyType{}, false
+	}
+
+	respData, err := sendPostRequest("keystoreGet", data)
+
+	if err != nil {
+		log.Println("error sendPostRequest: " + err.Error())
+		ok = false
+		return
+	}
+	// 反序列化
+
+	err = json.Unmarshal(respData, &value)
+	if err != nil {
+		log.Println("error json.Unmarshal: " + err.Error())
+		ok = false
+		return
+	}
+	ok = true
 	return
+	// keystoreShard := getKeystoreShard()
+	// value, ok = keystoreShard[key]
+	// return
 }
 
 var KeystoreGet = keystoreGet
@@ -578,7 +646,7 @@ func MapKeyFromBytes(data []byte) (truncated string) {
 }
 
 func sendPostRequest(url string, postData []byte) ([]byte, error) {
-	urlPrefix := "http://8.130.8.68/"
+	urlPrefix := "http://8.130.8.68:8080/"
 	// 创建一个字节缓冲区，用于存储 POST 数据
 	buffer := bytes.NewBuffer(postData)
 
@@ -589,8 +657,16 @@ func sendPostRequest(url string, postData []byte) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusBadRequest {
-		return nil, errors.New("Error reading request body: " + http.StatusText(http.StatusBadRequest))
+	if resp.StatusCode != http.StatusOK {
+		// 读取响应体
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			// 处理读取响应体错误
+			return nil, fmt.Errorf("error reading response body: %v", err)
+		}
+		// 打印服务器返回的错误信息
+		// fmt.Println("Server error:", string(body))
+		return nil, fmt.Errorf("server error: %s", string(body))
 	}
 
 	// 读取响应体
@@ -600,4 +676,15 @@ func sendPostRequest(url string, postData []byte) ([]byte, error) {
 	}
 
 	return responseData, nil
+}
+
+func sendPostRequest_noRespData(url string, postData []byte) error {
+	responseData, err := sendPostRequest(url, postData)
+	if err != nil {
+		return err
+	}
+	if string(responseData) != "nil" {
+		return errors.New(string(responseData))
+	}
+	return nil
 }
